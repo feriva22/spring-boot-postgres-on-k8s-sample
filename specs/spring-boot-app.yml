@@ -1,15 +1,40 @@
-apiVersion: extensions/v1beta1
+apiVersion: v1
+kind: Service
+metadata:
+  name: spring-boot-postgres-sample
+  namespace: default
+spec:
+  type: ClusterIP
+  ports:
+    - port: 8080
+  selector:
+    app: spring-boot-postgres-sample
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: postgres-config
+  namespace: default
+data:
+  postgres_user: admin
+  postgres_password: c1oudc0w
+---
+apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: spring-boot-postgres-sample
   namespace: default
 spec:
   replicas: 1
+  selector:
+    matchLabels:
+      app: spring-boot-postgres-sample
+      version: v1
   template:
     metadata:
-      name: spring-boot-postgres-sample
       labels:
         app: spring-boot-postgres-sample
+        version: v1
     spec:
       containers:
       - name: spring-boot-postgres-sample
@@ -25,8 +50,5 @@ spec:
                 name: postgres-config
                 key: postgres_password
           - name: POSTGRES_HOST
-            valueFrom:
-              configMapKeyRef:
-                name: hostname-config
-                key: postgres_host
-        image: <your Docker Hub account>/spring-boot-postgres-on-k8s:v1
+            value: postgres.backend-data.svc.cluster.local
+        image: feriva22/springboot-sample-postgres-k8s:v1
